@@ -24,6 +24,11 @@
         "command": "arcade-vsc.clear",
         "category": "Arcade",
         "title": "Clear Saved Data"
+      },
+      {
+        "command": "arcade-vsc.refresh",
+        "category": "Arcade",
+        "title": "Force Refresh"
       }
     ]
   },

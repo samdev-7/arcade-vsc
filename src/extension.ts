@@ -7,6 +7,7 @@ let statusBarItem: vscode.StatusBarItem;
 const idTest = (id: string): boolean => !!id && /^[A-Z0-9]{5,}$/.test(id);
 
 const hc_endpoint = "https://hackhour.hackclub.com/api/clock/";
+const hc_slack_channel = "https://hackclub.slack.com/archives/C06SBHMQU8G";
 
 async function checkID(id: string): Promise<boolean> | never {
 	const res = await fetch(hc_endpoint + id, {
@@ -129,6 +130,19 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
+	context.subscriptions.push(
+		vscode.commands.registerCommand('arcade-vsc.refresh', async () => {
+			await updateStatusBarItem(context);
+			vscode.window.showInformationMessage('Force refreshed Arcade status');
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('arcade-vsc.slack', async () => {
+			vscode.env.openExternal(vscode.Uri.parse('https://hackclub.slack.com/archives/C06SBHMQU8G'));
+		})
+	);
+
 	getID(context).then((id) => {
 		if (id === undefined) {
 			vscode.window.showInformationMessage('Arcade VSC is not set up yet. Run the "Arcade: Init" command to get started!');
@@ -144,6 +158,14 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	statusBarItem.show();
 	updateStatusBarItem(context);
+
+	const inter = setInterval(() => {
+		if (perm_error) {
+			clearInterval(inter);
+			return;
+		}
+		updateStatusBarItem(context);
+	}, 1000);
 }
 
 let perm_error = false;
@@ -155,6 +177,7 @@ async function permError() {
 	statusBarItem.command = '';
 	statusBarItem.color = new vscode.ThemeColor('statusBarItem.warningForeground');
 	statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+	console.error('Arcade VSC has encountered a unrecoverable error. Please reload VS Code to try again');
 }
 
 let end_date: Date | undefined;
@@ -164,7 +187,6 @@ async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<vo
 		return;
 	}
 
-	console.log('Updating status bar item');
 	let id = await getID(context);
 	if (id === undefined) {
 		statusBarItem.text = 'Arcade Not Set Up';
@@ -173,10 +195,12 @@ async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<vo
 		return;
 	}
 
-	statusBarItem.tooltip = `Hack Club Arcade  (ID: ${id})`;
-	statusBarItem.command = '';
+	statusBarItem.tooltip = `Hack Club Arcade (ID: ${id})`;
+	statusBarItem.command = 'arcade-vsc.slack';
 
-	if (end_date === undefined) {
+	// Swap out if too many requests are being sent
+	//if (end_date === undefined) {
+	if (true) {
 		try {
 			end_date = await sessionEnd(id);
 		} catch (e: unknown) {
@@ -208,17 +232,30 @@ async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<vo
 
 	const now = new Date();
 
-	if (end_date === undefined || end_date.getTime() < now.getTime()) {
+	if (end_date === undefined) {
 		vscode.window.showErrorMessage('Failed to get session end time: Unknown error');
 		permError();
 		return;
 	}
 
+	if (end_date.getTime() < now.getTime()) {
+		end_date = undefined;
+		updateStatusBarItem(context);
+		return;
+	}
+
+	// Uncomment if too many requests are being sent
+	// if (end_date.getTime() - now.getTime() < 1000) {
+	// 	end_date = undefined;
+	// 	updateStatusBarItem(context);
+	// 	return;
+	// }
+
 	const diff = new Date(end_date.getTime() - now.getTime());
 	const minutes = diff.getUTCMinutes();
 	const seconds = diff.getUTCSeconds();
 
-	statusBarItem.text = `$(clock) ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+	statusBarItem.text = `$(watch) ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
 export function deactivate(): void { }
