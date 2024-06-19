@@ -1,13 +1,26 @@
 {
   "name": "arcade-vsc",
   "displayName": "Arcade VSC",
-  "description": "Visual Code Integration with Hack Club Arcade",
-  "version": "0.0.1",
+  "description": "Visual Studio Code Integration with Hack Club Arcade",
+  "version": "0.5.0",
   "engines": {
     "vscode": "^1.90.0"
   },
+  "author": "Sam Liu <hello@samliu.dev> (https://samliu.dev)",
+  "repository": {
+    "repository": "github:samdev-7/arcade-vsc"
+  },
+  "license": "MIT",
+  "publisher": "samdev",
   "categories": [
     "Other"
+  ],
+  "icon": "images/icon.png",
+  "keywords": [
+    "arcade",
+    "timer",
+    "hack club",
+    "hackclub"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -37,8 +50,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "lint": "eslint src --ext ts"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
@@ -47,8 +59,6 @@
     "@types/vscode": "^1.90.0",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
     "@typescript-eslint/parser": "^7.11.0",
-    "@vscode/test-cli": "^0.0.9",
-    "@vscode/test-electron": "^2.4.0",
     "eslint": "^8.57.0",
     "typescript": "^5.4.5"
   }
