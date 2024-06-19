@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import fetch from 'node-fetch';
-import { stat } from 'fs';
+import axios from 'axios';
 
 let statusBarItem: vscode.StatusBarItem;
 
@@ -10,7 +9,7 @@ const hc_endpoint = "https://hackhour.hackclub.com/api/clock/";
 const hc_slack_channel = "https://hackclub.slack.com/archives/C06SBHMQU8G";
 
 async function checkID(id: string): Promise<boolean> | never {
-	const res = await fetch(hc_endpoint + id, {
+	const res = await axios(hc_endpoint + id, {
 		method: 'GET',
 		headers: {
 			'User-Agent': 'Arcade VSC Extension'
@@ -29,7 +28,7 @@ async function checkID(id: string): Promise<boolean> | never {
 }
 
 async function sessionEnd(id: string): Promise<Date> | never {
-	const res = await fetch(hc_endpoint + id, {
+	const res = await axios(hc_endpoint + id, {
 		method: 'GET',
 		headers: {
 			'User-Agent': 'Arcade VSC Extension'
@@ -44,7 +43,7 @@ async function sessionEnd(id: string): Promise<Date> | never {
 		throw new Error(`Unexpected status code of ${res.status}`);
 	}
 
-	const ms = Number(await res.text());
+	const ms = Number(await res.data);
 
 	if (isNaN(ms)) {
 		throw new Error('Invalid time received');
@@ -139,7 +138,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('arcade-vsc.slack', async () => {
-			vscode.env.openExternal(vscode.Uri.parse('https://hackclub.slack.com/archives/C06SBHMQU8G'));
+			vscode.env.openExternal(vscode.Uri.parse(hc_slack_channel));
 		})
 	);
 
