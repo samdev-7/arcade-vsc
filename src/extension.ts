@@ -127,6 +127,12 @@ async function showSessionNotifications(): Promise<boolean> {
 		.get("arcade-vsc.notifications.sessionNotifications", true);
 }
 
+async function showStartReminderNotifications(): Promise<boolean> {
+	return await vscode.workspace
+		.getConfiguration()
+		.get("arcade-vsc.notifications.startReminder", true);
+}
+
 export function activate(context: vscode.ExtensionContext) {
 	console.log("arcade-vsc is now active!");
 
