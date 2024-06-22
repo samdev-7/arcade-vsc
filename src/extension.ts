@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import axios, { get } from "axios";
+import { stat } from "fs";
 
 let statusBarItem: vscode.StatusBarItem;
 
@@ -264,6 +265,7 @@ let sent_error = "";
 async function setLoading() {
 	statusBarItem.text = "$(loading~spin) Arcade Loading";
 	statusBarItem.tooltip = "Please wait...";
+	statusBarItem.command = "arcade-vsc.refresh";
 	statusBarItem.color = undefined;
 	statusBarItem.backgroundColor = undefined;
 }
@@ -291,7 +293,7 @@ async function setError(
 	error = true;
 	statusBarItem.text = `$(loading~spin) Arcade Error`;
 	statusBarItem.tooltip = "Retrying every 10s...";
-	statusBarItem.command = "";
+	statusBarItem.command = "arcade-vsc.refresh";
 
 	if (perm) {
 		statusBarItem.color = new vscode.ThemeColor(
