@@ -269,7 +269,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		typing_times++;
-		if (typing_times > 20) {
+		if (typing_times > 3) {
 			let selection = await vscode.window.showInformationMessage("You seem to be working on something... Don't forget to start your Arcade session!", "Don't Show Me This");
 			startreminder_notified = true;
 			if (selection === "Don't Show Me This") {
