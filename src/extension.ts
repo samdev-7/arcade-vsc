@@ -282,6 +282,8 @@ function unsetError() {
 }
 
 let end_date: Date | undefined;
+let start_notified = false;
+let pause_notified = true;
 
 async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<void> {
 	let id = await getID(context);
@@ -311,6 +313,11 @@ async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<vo
 						unsetError();
 					}
 					statusBarItem.text = `No Arcade Session`;
+					start_notified = false;
+					if (!pause_notified) {
+						vscode.window.showInformationMessage('It seems like you have pause your Arcade session. Get back to work when you are ready!');
+						pause_notified = true;
+					}
 					break;
 				default:
 					await setError('Failed to get session end time: ' + e.message);
@@ -323,12 +330,18 @@ async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<vo
 
 	const now = new Date();
 
-	if (end_date.getTime() < now.getTime()) {
-		vscode.window.showInformationMessage('Your Arcade session has ended! 🎉');
+	if (end_date.getTime() - now.getTime() < 900) {
+		vscode.window.showInformationMessage('Your Arcade session has ended! Remember to scrap your progress 🚀');
 		console.log('Session has ended');
 		end_date = undefined;
 		updateStatusBarItem(context);
 		return;
+	}
+
+	if (end_date && !start_notified) {
+		vscode.window.showInformationMessage('Your Arcade session has started. Get to work 💻');
+		start_notified = true;
+		pause_notified = false;
 	}
 
 	const diff = new Date(end_date.getTime() - now.getTime());
