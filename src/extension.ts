@@ -262,7 +262,26 @@ export function activate(context: vscode.ExtensionContext) {
 		setTimeout(loop, 1000);
 	}
 	loop();
+
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (e: vscode.TextDocumentChangeEvent) => {
+		if (!await showStartReminderNotifications() || startreminder_notified || end_date !== undefined) {
+			return;
+		}
+
+		typing_times++;
+		if (typing_times > 20) {
+			let selection = await vscode.window.showInformationMessage("You seem to be working on something... Don't forget to start your Arcade session!", "Don't Show Me This");
+			startreminder_notified = true;
+			if (selection === "Don't Show Me This") {
+				await vscode.workspace.getConfiguration().update("arcade-vsc.notifications.startReminder", false, true);
+				await vscode.window.showInformationMessage("Start reminder notifications have been disabled. You can re-enable them in the configuration.");
+			}
+		}
+	}));
 }
+
+let startreminder_notified = false;
+let typing_times = 0;
 
 let perm_error = false;
 let error = false;
@@ -332,7 +351,7 @@ async function updateStatusBarItem(
 	context: vscode.ExtensionContext
 ): Promise<void> {
 	let id = await getID(context);
-	if (id === undefined) {
+	if (id === undefined || id === "") {
 		statusBarItem.text = "Arcade Not Set Up";
 		statusBarItem.tooltip = "Click to set up Arcade";
 		statusBarItem.command = "arcade-vsc.init";
@@ -367,6 +386,9 @@ async function updateStatusBarItem(
 							);
 						}
 						pause_notified = true;
+						typing_times = 0;
+						startreminder_notified = false;
+						end_date = undefined;
 					}
 					break;
 				default:
@@ -386,9 +408,10 @@ async function updateStatusBarItem(
 				"Your Arcade session has ended. Remember to scrap your progress! 🚀"
 			);
 		}
+		typing_times = 0;
+		startreminder_notified = false;
 		console.log("Session has ended");
 		end_date = undefined;
-		updateStatusBarItem(context);
 		return;
 	}
 
