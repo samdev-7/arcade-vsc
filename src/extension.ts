@@ -101,18 +101,23 @@ async function sessionEnd(id: string): Promise<Date> | never {
 
 
 async function saveID(context: vscode.ExtensionContext, id: string): Promise<void> {
-	await context.globalState.update('arcade-vsc-id', id);
+	await vscode.workspace.getConfiguration().update('arcade-vsc.slackID', id, true);
 }
 
 async function getID(context: vscode.ExtensionContext): Promise<string | undefined> {
-	return context.globalState.get('arcade-vsc-id');
+	return vscode.workspace.getConfiguration().get('arcade-vsc.slackID');
 }
 
 async function clearID(context: vscode.ExtensionContext): Promise<void> {
-	await context.globalState.update('arcade-vsc-id', undefined);
+	await vscode.workspace.getConfiguration().update('arcade-vsc.slackID', undefined, true);
+}
+
+async function showSessionNotifications(): Promise<boolean> {
+	return await vscode.workspace.getConfiguration().get('arcade-vsc.notifications.sessionNotifications', true);
 }
 
 export function activate(context: vscode.ExtensionContext) {
+
 	console.log('arcade-vsc is now active!');
 
 	statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0);
@@ -214,13 +219,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 	async function loop() {
-		console.log('tick')
 		if (perm_error) {
 			return;
 		}
 
 		if (error) {
-			console.log("error t")
 			updateStatusBarItem(context);
 			setTimeout(loop, 1000 * 10);
 			return;
@@ -295,7 +298,6 @@ async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<vo
 	}
 
 	try {
-		console.log('d')
 		end_date = await sessionEnd(id);
 	} catch (e: unknown) {
 		if (e instanceof Error) {
@@ -315,7 +317,9 @@ async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<vo
 					statusBarItem.text = `No Arcade Session`;
 					start_notified = false;
 					if (!pause_notified) {
-						vscode.window.showInformationMessage('It seems like you have paused or ended your Arcade session.');
+						if (await showSessionNotifications()) {
+							vscode.window.showInformationMessage('It seems like you have paused or ended your Arcade session.');
+						}
 						pause_notified = true;
 					}
 					break;
@@ -332,7 +336,9 @@ async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<vo
 
 
 	if (end_date.getTime() - now.getTime() < 900) {
-		vscode.window.showInformationMessage('Your Arcade session has ended. Remember to scrap your progress! 🚀');
+		if (await showSessionNotifications()) {
+			vscode.window.showInformationMessage('Your Arcade session has ended. Remember to scrap your progress! 🚀');
+		}
 		console.log('Session has ended');
 		end_date = undefined;
 		updateStatusBarItem(context);
@@ -340,12 +346,14 @@ async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<vo
 	}
 
 	if (end_date && !start_notified) {
-		if (end_date.getTime() - now.getTime() > 1000 * 60 * 59) {
-			vscode.window.showInformationMessage('Your started an Arcade session. Get to work! 💻');
-			console.log('Session has started');
-		} else {
-			vscode.window.showInformationMessage('Your Arcade session has been resumed. Continue working! 💻');
-			console.log('Session has resumed');
+		if (await showSessionNotifications()) {
+			if (end_date.getTime() - now.getTime() > 1000 * 60 * 59) {
+				vscode.window.showInformationMessage('Your started an Arcade session. Get to work! 💻');
+				console.log('Session has started');
+			} else {
+				vscode.window.showInformationMessage('Your Arcade session has been resumed. Continue working! 💻');
+				console.log('Session has resumed');
+			}
 		}
 		start_notified = true;
 		pause_notified = false;

@@ -43,7 +43,27 @@
         "category": "Arcade",
         "title": "Force Refresh"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Arcade VSC",
+      "properties": {
+        "arcade-vsc.slackID": {
+          "type": "string",
+          "default": "",
+          "description": "Your Hack Club Slack ID. Get it from #what-is-my-slack-id"
+        },
+        "arcade-vsc.notifications.sessionNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show status notifications regarding your session. (e.g. when your session ends)"
+        },
+        "arcade-vsc.notifications.startReminder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Remind you to start a session if you're coding without an active session."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
