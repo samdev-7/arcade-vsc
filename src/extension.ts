@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import axios from 'axios';
-import { stat } from 'fs';
+import axios, { get } from 'axios';
 
 let statusBarItem: vscode.StatusBarItem;
 
@@ -28,7 +27,7 @@ async function checkID(id: string, retries = 0): Promise<boolean> | never {
 						reject(new Error('Unknown error'));
 					}
 				}
-			}, (retries + 1) * 1000)
+			}, (retries + 1) * 500)
 		);
 	}
 
@@ -40,7 +39,8 @@ async function checkID(id: string, retries = 0): Promise<boolean> | never {
 			method: 'GET',
 			headers: {
 				'User-Agent': 'Arcade VSC Extension'
-			}
+			},
+			timeout: 5000
 		});
 	} catch (e: unknown) {
 		if (e instanceof axios.AxiosError) {
@@ -72,7 +72,8 @@ async function sessionEnd(id: string): Promise<Date> | never {
 		method: 'GET',
 		headers: {
 			'User-Agent': 'Arcade VSC Extension'
-		}
+		},
+		timeout: 5000
 	});
 
 	if (res.status === 404) {
@@ -210,23 +211,34 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	statusBarItem.show();
-	updateStatusBarItem(context);
 
-	const inter = setInterval(() => {
-		if (error) {
-			clearInterval(inter);
+
+	async function loop() {
+		console.log('tick')
+		if (perm_error) {
 			return;
 		}
+
+		if (error) {
+			console.log("error t")
+			updateStatusBarItem(context);
+			setTimeout(loop, 1000 * 10);
+			return;
+		}
+
 		updateStatusBarItem(context);
-	}, 1000);
+		setTimeout(loop, 1000);
+	}
+	loop();
 }
 
 let perm_error = false;
 let error = false;
+let sent_error = '';
 
 async function setLoading() {
 	statusBarItem.text = '$(loading~spin) Arcade Loading';
-	statusBarItem.tooltip = 'Please wait';
+	statusBarItem.tooltip = 'Please wait...';
 	statusBarItem.color = undefined;
 	statusBarItem.backgroundColor = undefined;
 }
@@ -240,10 +252,14 @@ async function setText(text: string, id: string) {
 }
 
 async function setError(message: string = 'An error occurred', perm = false): Promise<void> {
-	vscode.window.showErrorMessage(message);
+	console.error(`Arcade VSC has encountered an${perm ? 'unrecoverable ' : ''} error: ` + message);
+	if (sent_error !== message) {
+		vscode.window.showErrorMessage(message);
+	}
+	sent_error = message;
 	error = true;
 	statusBarItem.text = `$(loading~spin) Arcade Error`;
-	statusBarItem.tooltip = 'Please wait...';
+	statusBarItem.tooltip = 'Retrying every 10s...';
 	statusBarItem.command = '';
 
 	if (perm) {
@@ -251,19 +267,23 @@ async function setError(message: string = 'An error occurred', perm = false): Pr
 		statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
 		statusBarItem.text = `$(error) Arcade Error`;
 		statusBarItem.tooltip = 'Reload VS Code to try again';
-		console.error('Arcade VSC has encountered a unrecoverable error. Please reload VS Code to try again');
 	}
 
 	perm_error = perm;
 }
 
+function unsetError() {
+	console.log('Unsetting error');
+	vscode.window.showInformationMessage('Arcade error resolved');
+	sent_error = '';
+	error = false;
+	statusBarItem.color = undefined;
+	statusBarItem.backgroundColor = undefined;
+}
+
 let end_date: Date | undefined;
 
-async function updateStatusBarItem(context: vscode.ExtensionContext, retry = 0): Promise<void> {
-	if (error) {
-		return;
-	}
-
+async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<void> {
 	let id = await getID(context);
 	if (id === undefined) {
 		statusBarItem.text = 'Arcade Not Set Up';
@@ -272,60 +292,54 @@ async function updateStatusBarItem(context: vscode.ExtensionContext, retry = 0):
 		return;
 	}
 
-	// Swap out if too many requests are being sent
-	//if (end_date === undefined) {
-	if (true) {
-		try {
-			end_date = await sessionEnd(id);
-		} catch (e: unknown) {
-			if (e instanceof Error) {
-				switch (e.message) {
-					case 'ID not found':
-						vscode.window.showWarningMessage('Your saved ID is invalid. Run the "Arcade: Init" command to reconfigure');
-						clearID(context);
-						updateStatusBarItem(context);
-						break;
-					case 'Invalid time received':
-						await setError('Failed to get session time: Invalid data received');
-						break;
-					case 'No session active':
-						statusBarItem.text = `No Arcade Session`;
-						break;
-					default:
-						await setError('Failed to get session end time: ' + e.message);
-				}
-			} else {
-				await setError('Failed to get session end time: Unknown error', true);
+	try {
+		console.log('d')
+		end_date = await sessionEnd(id);
+	} catch (e: unknown) {
+		if (e instanceof Error) {
+			switch (e.message) {
+				case 'ID not found':
+					vscode.window.showWarningMessage('Your saved ID is invalid. Run the "Arcade: Init" command to reconfigure');
+					clearID(context);
+					updateStatusBarItem(context);
+					break;
+				case 'Invalid time received':
+					await setError('Failed to get session time: Invalid data received');
+					break;
+				case 'No session active':
+					if (error) {
+						unsetError();
+					}
+					statusBarItem.text = `No Arcade Session`;
+					break;
+				default:
+					await setError('Failed to get session end time: ' + e.message);
 			}
-			return;
+		} else {
+			await setError('Failed to get session end time: Unknown error', true);
 		}
+		return;
 	}
 
 	const now = new Date();
 
-	if (end_date === undefined) {
-		setError('Failed to get session end time: Unknown error', true);
-		return;
-	}
-
 	if (end_date.getTime() < now.getTime()) {
+		vscode.window.showInformationMessage('Your Arcade session has ended! 🎉');
+		console.log('Session has ended');
 		end_date = undefined;
 		updateStatusBarItem(context);
 		return;
 	}
 
-	// Uncomment if too many requests are being sent
-	// if (end_date.getTime() - now.getTime() < 1000) {
-	// 	end_date = undefined;
-	// 	updateStatusBarItem(context);
-	// 	return;
-	// }
-
 	const diff = new Date(end_date.getTime() - now.getTime());
 	const minutes = diff.getUTCMinutes();
 	const seconds = diff.getUTCSeconds();
 
+	if (error) {
+		unsetError();
+	}
 	setText(`$(watch) ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, id);
 }
+
 
 export function deactivate(): void { }
