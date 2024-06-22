@@ -330,8 +330,9 @@ async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<vo
 
 	const now = new Date();
 
+
 	if (end_date.getTime() - now.getTime() < 900) {
-		vscode.window.showInformationMessage('Your Arcade session has ended! Remember to scrap your progress 🚀');
+		vscode.window.showInformationMessage('Your Arcade session has ended. Remember to scrap your progress! 🚀');
 		console.log('Session has ended');
 		end_date = undefined;
 		updateStatusBarItem(context);
@@ -339,7 +340,13 @@ async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<vo
 	}
 
 	if (end_date && !start_notified) {
-		vscode.window.showInformationMessage('Your Arcade session has started. Get to work 💻');
+		if (end_date.getTime() - now.getTime() > 1000 * 60 * 59) {
+			vscode.window.showInformationMessage('Your started an Arcade session. Get to work! 💻');
+			console.log('Session has started');
+		} else {
+			vscode.window.showInformationMessage('Your Arcade session has been resumed. Continue working! 💻');
+			console.log('Session has resumed');
+		}
 		start_notified = true;
 		pause_notified = false;
 	}
