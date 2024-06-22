@@ -315,7 +315,7 @@ async function updateStatusBarItem(context: vscode.ExtensionContext): Promise<vo
 					statusBarItem.text = `No Arcade Session`;
 					start_notified = false;
 					if (!pause_notified) {
-						vscode.window.showInformationMessage('It seems like you have pause your Arcade session. Get back to work when you are ready!');
+						vscode.window.showInformationMessage('It seems like you have paused or ended your Arcade session.');
 						pause_notified = true;
 					}
 					break;
