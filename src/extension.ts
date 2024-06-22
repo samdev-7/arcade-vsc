@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import axios, { get } from "axios";
+import axios from "axios";
 
 let statusBarItem: vscode.StatusBarItem;
 

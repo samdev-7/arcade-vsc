@@ -20,6 +20,13 @@ Then, you will need to run the `Arcade: Init` command and enter your Slack ID.
 
 The extension will then automatically start displaying the timer in the status bar during active Arcade sessions.
 
+Arcade is configurable via VS Code's configuration options.
+
+## Known Issues
+
+- The timer may be incorrect if you pause your session and then resume it. This is an upstream issue with the Hack Club Arcade API.
+- The timer may flicker when it is updating, this is due to latency with the Hack Club Arcade API.
+
 ## Release Notes
 
 See the [changelog](https://github.com/samdev-7/arcade-vsc/blob/main/CHANGELOG.md) for more information.
