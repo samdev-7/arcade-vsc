@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import axios, { get } from "axios";
-import { stat } from "fs";
 
 let statusBarItem: vscode.StatusBarItem;
 
@@ -218,7 +217,7 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	getID(context).then(async (id) => {
-		if (id === undefined) {
+		if (id === undefined || id === "") {
 			vscode.window.showInformationMessage(
 				'Arcade VSC is not set up yet. Run the "Arcade: Init" command to get started!'
 			);
