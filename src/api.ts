@@ -10,6 +10,7 @@ axios.interceptors.request.use((config) => {
 
 export async function retrier<T>(
   fn: () => Promise<T>,
+  name: string = "",
   max_retries = 3,
   delay = 1000
 ): Promise<T> {
@@ -17,7 +18,7 @@ export async function retrier<T>(
     return await fn();
   } catch (err: unknown) {
     console.warn(
-      `Retrying${fn.name ? " " + fn.name : ""}... ${
+      `Retrying${name ? " " + name : ""}... ${
         max_retries - 1
       } retries left: ${err}`
     );
@@ -27,7 +28,7 @@ export async function retrier<T>(
     return await new Promise((resolve, reject) => {
       setTimeout(async () => {
         try {
-          resolve(await retrier(fn, max_retries - 1, delay));
+          resolve(await retrier(fn, name, max_retries - 1, delay));
         } catch (err) {
           reject(err);
         }
