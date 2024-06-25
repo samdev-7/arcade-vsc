@@ -24,7 +24,6 @@ Arcade is configurable via VS Code's configuration options.
 
 ## Known Issues
 
-- The timer may be incorrect if you pause your session and then resume it. This is an upstream issue with the Hack Club Arcade API.
 - The timer may flicker when it is updating, this is due to latency with the Hack Club Arcade API.
 
 ## Release Notes

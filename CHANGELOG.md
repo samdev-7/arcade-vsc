@@ -5,6 +5,30 @@ All notable changes to the "arcade-vsc" extension will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2024-06-24
+
+### Added
+
+- You can now click the status bar item to directly open Slack.
+- The goal is now shown in relevant notifications.
+- Pauses now show the estimated time remaining in the status bar.
+
+### Fixed
+
+- Fixed incorrect time when a session has previously been paused.
+- Removed an invalid tag.
+
+### Changed
+
+- Now uses the new Hack Hour API.
+- Background refactoring of code to improve future development.
+- Removed verbose warning notifications, still visible in console.
+- The timer is now synced with hakkuun.
+- Errors are now all recoverable.
+- Tweaked sensitivity of start reminder notifications.
+- Specific notification now exist for when you pause and resume a session.
+- Extension is now bundled.
+
 ## [0.5.3] - 2024-06-22
 
 ### Fixed
@@ -51,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release of the extension.
 - Added the ability to track hack hour times in the status bar.
 
+[0.6.0]: https://github.com/samdev-7/arcade-vsc/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/samdev-7/arcade-vsc/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/samdev-7/arcade-vsc/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/samdev-7/arcade-vsc/compare/v0.5.0...v0.5.1

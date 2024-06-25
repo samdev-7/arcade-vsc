@@ -2,7 +2,7 @@
   "name": "arcade-vsc",
   "displayName": "Arcade VSC",
   "description": "Visual Studio Code integration for Hack Club Arcade",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -19,13 +19,12 @@
   "keywords": [
     "arcade",
     "timer",
-    "hack club",
     "hackclub"
   ],
   "activationEvents": [
     "onStartupFinished"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
@@ -66,11 +65,13 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts"
+    "compile": "npm run check-types && node esbuild.js",
+    "check-types": "tsc --noEmit",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "vscode:prepublish": "npm run package",
+    "package": "npm run check-types && node esbuild.js --production"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
@@ -79,7 +80,9 @@
     "@types/vscode": "^1.90.0",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
     "@typescript-eslint/parser": "^7.11.0",
+    "esbuild": "^0.21.5",
     "eslint": "^8.57.0",
+    "npm-run-all": "^4.1.5",
     "typescript": "^5.4.5"
   },
   "dependencies": {
