@@ -1,9 +1,11 @@
 import * as vscode from "vscode";
 import * as statusBar from "./statusbar";
 import * as config from "./config";
-import { SessionData, getSession, retrier } from "./api";
+import * as notifications from "./notifications";
+import * as api from "./api";
 
-const hcSlackRedirect = "slack://";
+const hcSlackRedirect = "slack://channel?team=T0266FRGM&id=C06SBHMQU8G";
+let isActivate = false;
 
 export async function activate(context: vscode.ExtensionContext) {
   console.log("arcade-vsc activated");
@@ -32,10 +34,10 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      let session: SessionData | null = null;
+      let session: api.SessionData | null = null;
 
       try {
-        session = await retrier(() => getSession(id), "getSession");
+        session = await api.retrier(() => api.getSession(id), "getSession");
       } catch (err: unknown) {
         vscode.window.showErrorMessage(`Failed to check ID: ${err}`);
         return;
@@ -67,7 +69,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("arcade-vsc.refresh", async () => {
-      // TODO
+      await loop();
+      vscode.window.showInformationMessage("Force refreshed status");
     })
   );
 
@@ -83,10 +86,10 @@ export async function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    let session: SessionData | null = null;
+    let session: api.SessionData | null = null;
 
     try {
-      session = await retrier(() => getSession(id), "getSession");
+      session = await api.retrier(() => api.getSession(id), "getSession");
     } catch (err: unknown) {
       stickyError(`Failed to check ID: ${err}`);
       return;
@@ -97,6 +100,12 @@ export async function activate(context: vscode.ExtensionContext) {
       return;
     }
   });
+
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeTextDocument(
+      async () => await notifications.onTyping(isActivate)
+    )
+  );
 
   setInterval(loop, 1000);
 }
@@ -127,12 +136,12 @@ async function loop() {
     return;
   }
 
-  let session: SessionData | null = null;
+  let session: api.SessionData | null = null;
 
   try {
-    session = await getSession(id);
+    session = await api.getSession(id);
   } catch (err: unknown) {
-    stickyError(`Failed to check ID: ${err}`);
+    stickyError(`Failed to fetch session info: ${err}`);
     return;
   }
 
@@ -141,7 +150,22 @@ async function loop() {
     return;
   }
 
-  console.log(session);
+  if (!session.completed && !session.paused) {
+    onActive(session, id);
+  } else if (session.completed) {
+    onComplete(id);
+  } else if (session.paused) {
+    onPaused(session, id);
+  }
+}
+
+let startNotified = false;
+let completeNotified = true;
+let pauseNotified = false;
+let resumeNotified = false;
+
+async function onActive(session: api.SessionData, id: string) {
+  isActivate = true;
 
   const remainingMs = session.endTime.getTime() - Date.now();
   const remainingMin = Math.floor(remainingMs / 60000)
@@ -151,5 +175,49 @@ async function loop() {
     .toString()
     .padStart(2, "0");
 
-  statusBar.setText(`$(watch) ${remainingMin}:${remainingSec}`, id);
+  if (remainingMs > 0) {
+    statusBar.setText(`$(watch) ${remainingMin}:${remainingSec}`, id);
+  } else {
+    statusBar.setText("$(loading~spin) Ending...", id);
+  }
+
+  if (!pauseNotified && !startNotified) {
+    notifications.sessionStart(session.goal);
+    startNotified = true;
+    resumeNotified = true;
+  } else if (pauseNotified && !resumeNotified) {
+    notifications.sessionResume();
+    resumeNotified = true;
+    startNotified = true;
+  }
+  completeNotified = false;
+  pauseNotified = false;
+}
+
+async function onComplete(id: string) {
+  isActivate = false;
+
+  statusBar.setText("No Session", id);
+
+  if (!completeNotified) {
+    notifications.sessionComplete();
+    completeNotified = true;
+  }
+  startNotified = false;
+  pauseNotified = false;
+  resumeNotified = false;
+}
+
+async function onPaused(session: api.SessionData, id: string) {
+  isActivate = false;
+
+  statusBar.setText(`$(debug-pause) Paused: ${session.remaining} mins`, id);
+
+  if (!pauseNotified) {
+    notifications.sessionPause();
+    pauseNotified = true;
+  }
+  startNotified = false;
+  completeNotified = false;
+  resumeNotified = false;
 }

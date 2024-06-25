@@ -34,9 +34,11 @@ export async function setError() {
   statusBarItem.text = "$(error) Arcade Error";
   statusBarItem.tooltip = "An error occurred while fetching the status";
   statusBarItem.command = "arcade-vsc.refresh";
-  statusBarItem.color = new vscode.ThemeColor("statusBarItem.errorForeground");
+  statusBarItem.color = new vscode.ThemeColor(
+    "statusBarItem.warningForeground"
+  );
   statusBarItem.backgroundColor = new vscode.ThemeColor(
-    "statusBarItem.errorBackground"
+    "statusBarItem.warningBackground"
   );
 }
 

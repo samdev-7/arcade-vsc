@@ -29,3 +29,9 @@ export async function showStartReminderNotifications(): Promise<boolean> {
     .getConfiguration()
     .get("arcade-vsc.notifications.startReminder", true);
 }
+
+export async function hideStartReminderNotifications(): Promise<void> {
+  await vscode.workspace
+    .getConfiguration()
+    .update("arcade-vsc.notifications.startReminder", false, true);
+}
