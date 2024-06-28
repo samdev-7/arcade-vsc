@@ -75,7 +75,8 @@
     "views": {
       "arcade": [
         {
-          "id": "arcadeControl",
+          "type": "webview",
+          "id": "arcade.control",
           "name": "Arcade Session"
         }
       ]

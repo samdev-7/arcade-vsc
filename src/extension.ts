@@ -3,7 +3,7 @@ import * as statusBar from "./statusbar";
 import * as config from "./config";
 import * as notifications from "./notifications";
 import * as api from "./api";
-import { ArcadeSessionControl } from "./sidebar";
+import { ArcadeViewProvider } from "./sidebar";
 
 const hcSlackRedirect = "slack://channel?team=T0266FRGM&id=C06SBHMQU8G";
 let isActivate = false;
@@ -108,9 +108,12 @@ export async function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  vscode.window.registerTreeDataProvider(
-    "arcadeControl",
-    new ArcadeSessionControl()
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      "arcade.control",
+      new ArcadeViewProvider(),
+      { webviewOptions: { retainContextWhenHidden: true } }
+    )
   );
 
   setInterval(loop, 1000);
