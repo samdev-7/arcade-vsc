@@ -3,6 +3,7 @@ import * as statusBar from "./statusbar";
 import * as config from "./config";
 import * as notifications from "./notifications";
 import * as api from "./api";
+import { ArcadeSessionControl } from "./sidebar";
 
 const hcSlackRedirect = "slack://channel?team=T0266FRGM&id=C06SBHMQU8G";
 let isActivate = false;
@@ -105,6 +106,11 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidChangeTextDocument(
       async () => await notifications.onTyping(isActivate)
     )
+  );
+
+  vscode.window.registerTreeDataProvider(
+    "arcadeControl",
+    new ArcadeSessionControl()
   );
 
   setInterval(loop, 1000);

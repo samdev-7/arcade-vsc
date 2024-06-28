@@ -15,7 +15,7 @@
   "categories": [
     "Other"
   ],
-  "icon": "images/icon.png",
+  "icon": "media/icon.png",
   "keywords": [
     "arcade",
     "timer",
@@ -62,6 +62,23 @@
           "description": "Remind you to start a session if you're coding without an active session."
         }
       }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "arcade",
+          "title": "Hack Club Arcade",
+          "icon": "media/sidebar.svg"
+        }
+      ]
+    },
+    "views": {
+      "arcade": [
+        {
+          "id": "arcadeControl",
+          "name": "Arcade Session"
+        }
+      ]
     }
   },
   "scripts": {
