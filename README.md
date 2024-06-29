@@ -1,6 +1,7 @@
 # Arcade VSC
 
 A VS code extension that allows you to view the [Hack Club Arcade](https://hackclub.com/arcade) timer in your editor.
+Install it [from the marketplace](https://marketplace.visualstudio.com/items?itemName=samdev.arcade-vsc).
 
 ## Features
 
