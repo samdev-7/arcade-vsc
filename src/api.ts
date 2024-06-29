@@ -72,6 +72,7 @@ type RawSessionData = {
     endTime: string;
     paused: boolean;
     completed: boolean;
+    work: string;
     goal: string;
   };
 };
@@ -89,6 +90,7 @@ export type SessionData = {
   endTime: Date;
   paused: boolean;
   completed: boolean;
+  work: string;
   goal: string;
 };
 
@@ -138,6 +140,7 @@ export async function getSession(id: string): Promise<SessionData | null> {
     endTime: new Date(data.data.endTime),
     paused: data.data.paused,
     completed: data.data.completed,
+    work: data.data.work,
     goal: data.data.goal,
   };
 }

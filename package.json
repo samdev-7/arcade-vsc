@@ -76,8 +76,8 @@
       "arcade": [
         {
           "type": "webview",
-          "id": "arcade.control",
-          "name": "Hack Club Arcade"
+          "id": "arcade.session",
+          "name": "Arcade Session"
         }
       ]
     }

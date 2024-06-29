@@ -115,7 +115,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
-      "arcade.control",
+      "arcade.session",
       new ArcadeViewProvider(context.extensionUri),
       { webviewOptions: { retainContextWhenHidden: true } }
     )
@@ -193,7 +193,7 @@ async function onActive(session: api.SessionData, id: string) {
     .toString()
     .padStart(2, "0");
 
-  updateSessionInfo(Math.floor(remainingMs / 1000), session.goal);
+  updateSessionInfo(Math.floor(remainingMs / 1000), session.goal, session.work);
 
   if (remainingMs > 0) {
     statusBar.setText(`$(watch) ${remainingMin}:${remainingSec}`, id);

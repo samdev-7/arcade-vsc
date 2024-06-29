@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 let hasSession = false;
 let isPaused = false;
 let remainingSeconds = 0;
+let work = "";
 let goal = "";
 
 let view: vscode.WebviewView | undefined;
@@ -26,7 +27,7 @@ export class ArcadeViewProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [vscode.Uri.joinPath(extensionUri!, "dist")],
     };
 
-    webviewView.webview.html = htmlTemplate("<p>Loading...</p>");
+    webviewView.webview.html = htmlTemplate("<p>Loading Arcade...</p>");
   }
 }
 
@@ -35,8 +36,9 @@ export function updateSessionStatus(hasS: boolean, isP: boolean): void {
   isPaused = isP;
 }
 
-export function updateSessionInfo(seconds: number, g: string): void {
+export function updateSessionInfo(seconds: number, g: string, w: string): void {
   remainingSeconds = seconds;
+  work = w;
   goal = g;
 }
 
@@ -53,13 +55,20 @@ function getHtmlContent(): string {
     `;
   } else {
     return `
-    <p>Your session is active.</p>
-    <p>Time remaining: ${remainingSeconds} seconds</p>
-    <p>Goal: ${goal}</p>
-    <div class="row">
+    <p>Get to work! You have <code>${Math.ceil(
+      remainingSeconds / 60
+    )}</code> minute${
+      Math.floor(remainingSeconds / 60) === 1 ? "" : "s"
+    } left to work on:</p>
+    <vscode-divider></vscode-divider>
+    <p><em>${work}</em></p>
+    <vscode-divider></vscode-divider>
+    <p class="goal"><strong>Goal:</strong> ${goal}</p>
+    <div class="btn-group">
       <vscode-button>Pause</vscode-button>
-      <vscode-button appearance="secondary">End early</vscode-button>
+      <vscode-button appearance="secondary">End Early</vscode-button>
     </div>
+
     `;
   }
 
@@ -73,18 +82,21 @@ export function refreshView(): void {
 }
 
 function htmlTemplate(content: string) {
-  const nonce = getNonce();
-
   return `<!DOCTYPE html>
     <html lang="en">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}';">
         <style>
-          .row {
-            display: grid;
-            grid-auto-columns: max-content;
+          code {
+            color: var(--vscode-editorWarning-foreground);
+          }
+          .btn-group vscode-button + vscode-button {
+            margin-left: 0.4rem;
+          }
+          .goal {
+            margin-top: 0.3rem;
+            opacity: 0.8;
           }
         </style>
       </head>
@@ -94,8 +106,6 @@ function htmlTemplate(content: string) {
           extensionUri
             ? '<script type="module" src="' +
               getUrl(view!.webview, extensionUri, ["dist", "webview.js"]) +
-              '" nonce="' +
-              nonce +
               '"></script>'
             : ""
         }
@@ -109,14 +119,4 @@ function getUrl(
   pathList: string[]
 ): vscode.Uri {
   return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, ...pathList));
-}
-
-function getNonce() {
-  let text = "";
-  const possible =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < 32; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
 }
