@@ -3,10 +3,15 @@ import * as statusBar from "./statusbar";
 import * as config from "./config";
 import * as notifications from "./notifications";
 import * as api from "./api";
-import { ArcadeViewProvider } from "./sidebar";
+import {
+  ArcadeViewProvider,
+  refreshView,
+  updateSessionStatus,
+  updateSessionInfo,
+} from "./sidebar";
 
 const hcSlackRedirect = "slack://channel?team=T0266FRGM&id=C06SBHMQU8G";
-let isActivate = false;
+let isActive = false;
 
 export async function activate(context: vscode.ExtensionContext) {
   console.log("arcade-vsc activated");
@@ -104,14 +109,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument(
-      async () => await notifications.onTyping(isActivate)
+      async () => await notifications.onTyping(isActive)
     )
   );
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
       "arcade.control",
-      new ArcadeViewProvider(),
+      new ArcadeViewProvider(context.extensionUri),
       { webviewOptions: { retainContextWhenHidden: true } }
     )
   );
@@ -159,13 +164,17 @@ async function loop() {
     return;
   }
 
+  updateSessionStatus(!session.completed || session.paused, session.paused);
+
   if (!session.completed && !session.paused) {
-    onActive(session, id);
+    await onActive(session, id);
   } else if (session.completed) {
-    onComplete(id);
+    await onComplete(id);
   } else if (session.paused) {
-    onPaused(session, id);
+    await onPaused(session, id);
   }
+
+  refreshView();
 }
 
 let startNotified = false;
@@ -174,7 +183,7 @@ let pauseNotified = false;
 let resumeNotified = false;
 
 async function onActive(session: api.SessionData, id: string) {
-  isActivate = true;
+  isActive = true;
 
   const remainingMs = session.endTime.getTime() - Date.now();
   const remainingMin = Math.floor(remainingMs / 60000)
@@ -183,6 +192,8 @@ async function onActive(session: api.SessionData, id: string) {
   const remainingSec = Math.floor((remainingMs % 60000) / 1000)
     .toString()
     .padStart(2, "0");
+
+  updateSessionInfo(Math.floor(remainingMs / 1000), session.goal);
 
   if (remainingMs > 0) {
     statusBar.setText(`$(watch) ${remainingMin}:${remainingSec}`, id);
@@ -204,7 +215,7 @@ async function onActive(session: api.SessionData, id: string) {
 }
 
 async function onComplete(id: string) {
-  isActivate = false;
+  isActive = false;
 
   statusBar.setText("No Session", id);
 
@@ -218,7 +229,7 @@ async function onComplete(id: string) {
 }
 
 async function onPaused(session: api.SessionData, id: string) {
-  isActivate = false;
+  isActive = false;
 
   statusBar.setText(`$(debug-pause) Paused: ${session.remaining} mins`, id);
 

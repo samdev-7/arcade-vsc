@@ -14,17 +14,29 @@ async function main() {
     platform: "node",
     outfile: "dist/extension.js",
     external: ["vscode"],
-    logLevel: "silent",
+    logLevel: "info",
     plugins: [
       /* add to the end of plugins array */
       esbuildProblemMatcherPlugin,
     ],
   });
+  const webviewCtx = await esbuild.context({
+    entryPoints: ["src/webview.ts"],
+    bundle: true,
+    format: "esm",
+    minify: production,
+    sourcemap: !production,
+    outfile: "dist/webview.js",
+    logLevel: "info",
+  });
   if (watch) {
     await ctx.watch();
+    await webviewCtx.watch();
   } else {
     await ctx.rebuild();
+    await webviewCtx.rebuild();
     await ctx.dispose();
+    await webviewCtx.dispose();
   }
 }
 
