@@ -35,3 +35,22 @@ export async function hideStartReminderNotifications(): Promise<void> {
     .getConfiguration()
     .update("arcade-vsc.notifications.startReminder", false, true);
 }
+
+export async function saveApiKey(
+  context: vscode.ExtensionContext,
+  apiKey: string
+): Promise<void> {
+  await context.secrets.store("arcade-vsc.apiKey", apiKey);
+}
+
+export async function getApiKey(
+  context: vscode.ExtensionContext
+): Promise<string | undefined> {
+  return await context.secrets.get("arcade-vsc.apiKey");
+}
+
+export async function clearApiKey(
+  context: vscode.ExtensionContext
+): Promise<void> {
+  await context.secrets.delete("arcade-vsc.apiKey");
+}

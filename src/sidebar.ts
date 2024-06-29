@@ -46,12 +46,23 @@ function getHtmlContent(): string {
   console.log(`${hasSession} ${isPaused}`);
   if (!hasSession) {
     return `
-    <p>It looks like you don't have an active Arcade session.</p>
+    <p>Let's start a new session.</p>
+    <div class="input">
+      <strong>What are you working on?</strong>
+      <vscode-text-field placeholder="Today I'm working on..."></vscode-text-field>
+    </div>
+    <vscode-button class="start-btn">Start the Timer</vscode-button>
     `;
   } else if (isPaused) {
     return `
-    <p>Your session is paused.</p>
-    <p>Click <a href="command:arcade.resumeSession">here</a> to resume your session.</p>
+    <p>Take a break! Your session is paused:</p>
+    <vscode-divider></vscode-divider>
+    <p><em>${work}</em></p>
+    <vscode-divider></vscode-divider>
+    <p class="goal"><strong>Goal:</strong> ${goal}</p>
+    <div class="btn-group">
+      <vscode-button>Resume</vscode-button>
+    </div>
     `;
   } else {
     return `
@@ -68,11 +79,8 @@ function getHtmlContent(): string {
       <vscode-button>Pause</vscode-button>
       <vscode-button appearance="secondary">End Early</vscode-button>
     </div>
-
     `;
   }
-
-  return "There was an error loading the content. Please try reloading.";
 }
 
 export function refreshView(): void {
@@ -97,6 +105,13 @@ function htmlTemplate(content: string) {
           .goal {
             margin-top: 0.3rem;
             opacity: 0.8;
+          }
+          .input {
+            display: grid;
+            gap: 0.3rem;
+          }
+          .start-btn {
+            margin-top: 1rem;
           }
         </style>
       </head>

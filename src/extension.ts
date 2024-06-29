@@ -56,6 +56,8 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
       }
 
+      // let apiKey = await vscode.window.showInputBox({
+
       vscode.window.showInformationMessage("Successfully saved your ID! 🎉");
       config.saveID(id);
       statusBar.setLoading();
@@ -64,12 +66,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("arcade-vsc.clear", async () => {
-      if ((await config.getID()) === "") {
-        vscode.window.showWarningMessage("No ID is saved");
-        return;
-      }
       await config.clearID();
-      vscode.window.showInformationMessage("Cleared saved ID");
+      await config.clearApiKey(context);
+      vscode.window.showInformationMessage("Cleared saved data");
     })
   );
 
@@ -232,6 +231,7 @@ async function onPaused(session: api.SessionData, id: string) {
   isActive = false;
 
   statusBar.setText(`$(debug-pause) Paused: ${session.remaining} mins`, id);
+  updateSessionInfo(0, session.goal, session.work);
 
   if (!pauseNotified) {
     notifications.sessionPause();
