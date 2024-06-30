@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 
 let hasSession = false;
 let isPaused = false;
+let loading = false;
 let remainingSeconds = 0;
 let work = "";
 let goal = "";
@@ -10,8 +11,17 @@ let view: vscode.WebviewView | undefined;
 let extensionUri: vscode.Uri | undefined;
 
 export class ArcadeViewProvider implements vscode.WebviewViewProvider {
-  constructor(extensionU: vscode.Uri) {
+  onWebviewMessage: (message: any, context: vscode.ExtensionContext) => void;
+  context: vscode.ExtensionContext;
+
+  constructor(
+    extensionU: vscode.Uri,
+    onWebviewMessage: (message: any, context: vscode.ExtensionContext) => void,
+    context: vscode.ExtensionContext
+  ) {
     extensionUri = extensionU;
+    this.onWebviewMessage = onWebviewMessage;
+    this.context = context;
   }
 
   resolveWebviewView(
@@ -28,6 +38,10 @@ export class ArcadeViewProvider implements vscode.WebviewViewProvider {
     };
 
     webviewView.webview.html = htmlTemplate("<p>Loading Arcade...</p>");
+
+    webviewView.webview.onDidReceiveMessage((message: any) => {
+      this.onWebviewMessage(message, this.context);
+    });
   }
 }
 
@@ -42,8 +56,11 @@ export function updateSessionInfo(seconds: number, g: string, w: string): void {
   goal = g;
 }
 
+export function updateLoadingStatus(l: boolean): void {
+  loading = l;
+}
+
 function getHtmlContent(): string {
-  console.log(`${hasSession} ${isPaused}`);
   if (!hasSession) {
     return `
     <p>Let's start a new session.</p>
@@ -51,7 +68,9 @@ function getHtmlContent(): string {
       <strong>What are you working on?</strong>
       <vscode-text-field placeholder="Today I'm working on..."></vscode-text-field>
     </div>
-    <vscode-button class="start-btn">Start the Timer</vscode-button>
+    <vscode-button class="start-btn" id="start" ${
+      loading ? "disabled" : ""
+    }>Start the Timer</vscode-button>
     `;
   } else if (isPaused) {
     return `
@@ -61,7 +80,9 @@ function getHtmlContent(): string {
     <vscode-divider></vscode-divider>
     <p class="goal"><strong>Goal:</strong> ${goal}</p>
     <div class="btn-group">
-      <vscode-button>Resume</vscode-button>
+      <vscode-button id="resume" ${
+        loading ? "disabled" : ""
+      }>Resume</vscode-button>
     </div>
     `;
   } else {
@@ -76,8 +97,12 @@ function getHtmlContent(): string {
     <vscode-divider></vscode-divider>
     <p class="goal"><strong>Goal:</strong> ${goal}</p>
     <div class="btn-group">
-      <vscode-button>Pause</vscode-button>
-      <vscode-button appearance="secondary">End Early</vscode-button>
+      <vscode-button id="pause" ${
+        loading ? "disabled" : ""
+      }>Pause</vscode-button>
+      <vscode-button appearance="secondary" id="end" ${
+        loading ? "disabled" : ""
+      }>End Early</vscode-button>
     </div>
     `;
   }

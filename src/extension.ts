@@ -8,6 +8,7 @@ import {
   refreshView,
   updateSessionStatus,
   updateSessionInfo,
+  updateLoadingStatus,
 } from "./sidebar";
 
 const hcSlackRedirect = "slack://channel?team=T0266FRGM&id=C06SBHMQU8G";
@@ -115,7 +116,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
       "arcade.session",
-      new ArcadeViewProvider(context.extensionUri),
+      new ArcadeViewProvider(context.extensionUri, onWebviewMessage, context),
       { webviewOptions: { retainContextWhenHidden: true } }
     )
   );
@@ -240,4 +241,40 @@ async function onPaused(session: api.SessionData, id: string) {
   startNotified = false;
   completeNotified = false;
   resumeNotified = false;
+}
+
+async function onWebviewMessage(event: any, context: vscode.ExtensionContext) {
+  let command = event.command as "start" | "pause" | "resume" | "end";
+
+  if ((await config.getApiKey(context)) === undefined) {
+    vscode.window.showErrorMessage(
+      `You need to set your API key to interact with sessions. Run the "Arcade: Init" command to set it up.`
+    );
+    return;
+  }
+
+  updateLoadingStatus(true);
+  refreshView();
+
+  switch (command) {
+    case "start":
+      console.log("start from webview");
+      api.startSession((await config.getApiKey(context))!);
+      break;
+    case "pause":
+      console.log("pause from webview");
+      api.pauseSession((await config.getApiKey(context))!);
+      break;
+    case "resume":
+      console.log("resume from webview");
+      api.pauseSession((await config.getApiKey(context))!);
+      break;
+    case "end":
+      console.log("end from webview");
+      api.endSession((await config.getApiKey(context))!);
+      break;
+  }
+
+  updateLoadingStatus(false);
+  refreshView();
 }

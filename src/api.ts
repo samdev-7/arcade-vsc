@@ -206,3 +206,62 @@ export async function getStats(id: string): Promise<StatsData | null> {
     total: data.data.total,
   };
 }
+
+type RawStartError = {
+  ok: false;
+  error: string;
+};
+
+type RawStartData = {
+  ok: true;
+  data: {
+    id: string;
+    slackId: string;
+    createdAt: string;
+  };
+};
+
+export async function startSession(key: string): Promise<void> {
+  throw new Error("Not implemented");
+}
+
+type RawPauseError = {
+  ok: false;
+  error: string;
+};
+
+type RawPauseData = {
+  ok: true;
+  data: {
+    id: string;
+    slackId: string;
+    createdAt: string;
+    paused: boolean;
+  };
+};
+
+export type PauseData = {
+  paused: boolean;
+};
+
+export async function pauseSession(key: string): Promise<PauseData> {
+  throw new Error("Not implemented");
+}
+
+type RawEndError = {
+  ok: false;
+  error: string;
+};
+
+type RawEndData = {
+  ok: true;
+  data: {
+    id: string;
+    slackId: string;
+    createdAt: string;
+  };
+};
+
+export async function endSession(key: string): Promise<void> {
+  throw new Error("Not implemented");
+}
