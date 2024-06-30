@@ -113,13 +113,14 @@ export async function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(
-      "arcade.session",
-      new ArcadeViewProvider(context.extensionUri, onWebviewMessage, context),
-      { webviewOptions: { retainContextWhenHidden: true } }
-    )
-  );
+  // TODO: Re-enable webview when ready
+  // context.subscriptions.push(
+  //   vscode.window.registerWebviewViewProvider(
+  //     "arcade.session",
+  //     new ArcadeViewProvider(context.extensionUri, onWebviewMessage, context),
+  //     { webviewOptions: { retainContextWhenHidden: true } }
+  //   )
+  // );
 
   setInterval(loop, 1000);
 }
