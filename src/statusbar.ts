@@ -22,9 +22,9 @@ export async function setLoading() {
   statusBarItem.color = undefined;
 }
 
-export async function setText(text: string, id: string) {
+export async function setText(text: string) {
   statusBarItem.text = text;
-  statusBarItem.tooltip = "Hack Club Arcade (ID: " + id + ")";
+  statusBarItem.tooltip = "Hack Club Arcade";
   statusBarItem.command = "arcade-vsc.slack";
   statusBarItem.color = undefined;
   statusBarItem.backgroundColor = undefined;

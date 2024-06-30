@@ -43,7 +43,7 @@ type RawStatusData = {
   slackConnected: boolean;
 };
 
-export async function getStatus(max_retries = 0): Promise<boolean> {
+export async function getStatus(): Promise<boolean> {
   let resp: AxiosResponse<RawStatusData>;
   try {
     resp = await axios.get(hhEndpoint + "/status");
@@ -94,17 +94,21 @@ export type SessionData = {
   goal: string;
 };
 
-export async function getSession(id: string): Promise<SessionData | null> {
-  if (id === "") {
-    throw new Error("Error while fetching session: ID cannot be empty");
+export async function getSession(key: string): Promise<SessionData | null> {
+  if (key === "") {
+    throw new Error("Error while fetching session: API key cannot be empty");
   }
 
   let resp: AxiosResponse<RawSessionData | RawSessionError>;
   try {
-    resp = await axios.get(hhEndpoint + "/api/session/" + id);
+    resp = await axios.get(hhEndpoint + "/api/session/", {
+      headers: {
+        Authorization: `Bearer ${key}`,
+      },
+    });
   } catch (err) {
     if (err instanceof AxiosError) {
-      if (err.response === undefined || err.response.status !== 404) {
+      if (err.response === undefined) {
         throw new Error(`Error while fetching session: ${err}`);
       }
 
@@ -114,7 +118,7 @@ export async function getSession(id: string): Promise<SessionData | null> {
     }
   }
 
-  if (resp.status !== 200 && resp.status !== 404) {
+  if (resp.status !== 200 && resp.status !== 404 && resp.status !== 401) {
     throw new Error(
       `Error while fetching session: Unexpected status code ${resp.status}`
     );
@@ -122,7 +126,10 @@ export async function getSession(id: string): Promise<SessionData | null> {
 
   const data = resp.data;
 
-  if (!data.ok && data.error === "User not found") {
+  if (
+    !data.ok &&
+    (data.error === "User not found" || data.error === "Unauthorized")
+  ) {
     return null;
   } else if (!data.ok) {
     throw new Error(
@@ -163,17 +170,21 @@ export type StatsData = {
   total: number;
 };
 
-export async function getStats(id: string): Promise<StatsData | null> {
-  if (id === "") {
-    throw new Error("Error while fetching session: ID cannot be empty");
+export async function getStats(key: string): Promise<StatsData | null> {
+  if (key === "") {
+    throw new Error("Error while fetching session: API key cannot be empty");
   }
 
   let resp: AxiosResponse<RawStatsData | RawStatsError>;
   try {
-    resp = await axios.get(hhEndpoint + "/api/stats/" + id);
+    resp = await axios.get(hhEndpoint + "/api/stats/", {
+      headers: {
+        Authorization: `Bearer ${key}`,
+      },
+    });
   } catch (err) {
     if (err instanceof AxiosError) {
-      if (err.response === undefined || err.response.status !== 404) {
+      if (err.response === undefined) {
         throw new Error(`Error while fetching session: ${err}`);
       }
 
@@ -183,7 +194,7 @@ export async function getStats(id: string): Promise<StatsData | null> {
     }
   }
 
-  if (resp.status !== 200 && resp.status !== 404) {
+  if (resp.status !== 200 && resp.status !== 404 && resp.status !== 401) {
     throw new Error(
       `Error while fetching session: Unexpected status code ${resp.status}`
     );
@@ -191,7 +202,10 @@ export async function getStats(id: string): Promise<StatsData | null> {
 
   const data = resp.data;
 
-  if (!data.ok && data.error === "User not found") {
+  if (
+    !data.ok &&
+    (data.error === "User not found" || data.error === "Unauthorized")
+  ) {
     return null;
   } else if (!data.ok) {
     throw new Error(

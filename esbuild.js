@@ -20,23 +20,24 @@ async function main() {
       esbuildProblemMatcherPlugin,
     ],
   });
-  const webviewCtx = await esbuild.context({
-    entryPoints: ["src/webview.ts"],
-    bundle: true,
-    format: "esm",
-    minify: production,
-    sourcemap: !production,
-    outfile: "dist/webview.js",
-    logLevel: "info",
-  });
+  // TODO: re-enable webview when ready
+  // const webviewCtx = await esbuild.context({
+  //   entryPoints: ["src/webview.ts"],
+  //   bundle: true,
+  //   format: "esm",
+  //   minify: production,
+  //   sourcemap: !production,
+  //   outfile: "dist/webview.js",
+  //   logLevel: "info",
+  // });
   if (watch) {
     await ctx.watch();
-    await webviewCtx.watch();
+    // await webviewCtx.watch();
   } else {
     await ctx.rebuild();
-    await webviewCtx.rebuild();
+    // await webviewCtx.rebuild();
     await ctx.dispose();
-    await webviewCtx.dispose();
+    // await webviewCtx.dispose();
   }
 }
 
