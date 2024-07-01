@@ -5,6 +5,12 @@ All notable changes to the "arcade-vsc" extension will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.3] - 2024-07-01
+
+## Fixed
+
+- Now allows you to un-focus from the init prompts to copy paste.
+
 ## [0.6.2] - 2024-07-01
 
 ### Fixed
@@ -93,6 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release of the extension.
 - Added the ability to track hack hour times in the status bar.
 
+[0.6.3]: https://github.com/samdev-7/arcade-vsc/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/samdev-7/arcade-vsc/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/samdev-7/arcade-vsc/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/samdev-7/arcade-vsc/compare/v0.5.3...v0.6.0

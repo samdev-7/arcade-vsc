@@ -36,6 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
           !!input && /^[A-Z0-9]{5,}$/.test(input)
             ? ""
             : "Please enter a valid ID (not your username or API key)",
+        ignoreFocusOut: true,
       });
 
       if (!id) {
@@ -56,6 +57,7 @@ export async function activate(context: vscode.ExtensionContext) {
           !!input && /^[a-z,0-9,-]{36,36}$/.test(input)
             ? ""
             : "Please enter a valid API key (not your username or ID)",
+        ignoreFocusOut: true,
       });
 
       if (!key) {
