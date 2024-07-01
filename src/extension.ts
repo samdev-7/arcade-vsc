@@ -11,7 +11,11 @@ import * as api from "./api";
 //   updateLoadingStatus,
 // } from "./sidebar";
 
-const hcSlackRedirect = "slack://channel?team=T0266FRGM&id=C06SBHMQU8G";
+const HC_SLACK_REDIRECT = "slack://channel?team=T0266FRGM&id=C06SBHMQU8G";
+const FETCH_INTERVAL = 1000 * 10;
+const FETCH_ERROR_FACTOR = 2;
+const FETCH_RETRY_CAP = 1000 * 60 * 5;
+
 let isActive = false;
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -74,14 +78,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("arcade-vsc.refresh", async () => {
-      await loop(context);
+      await loop(context, Infinity, undefined, true);
       vscode.window.showInformationMessage("Force refreshed status");
     })
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand("arcade-vsc.slack", async () => {
-      vscode.env.openExternal(vscode.Uri.parse(hcSlackRedirect));
+      vscode.env.openExternal(vscode.Uri.parse(HC_SLACK_REDIRECT));
     })
   );
 
@@ -91,19 +95,19 @@ export async function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    let session: api.SessionData | null = null;
+    // let session: api.SessionData | null = null;
 
-    try {
-      session = await api.retrier(() => api.getSession(key), "getSession");
-    } catch (err: unknown) {
-      stickyError(`Failed to validate API key: ${err}`);
-      return;
-    }
+    // try {
+    //   session = await api.retrier(() => api.getSession(key), "getSession");
+    // } catch (err: unknown) {
+    //   stickyError(`Failed to validate API key: ${err}`);
+    //   return;
+    // }
 
-    if (session === null) {
-      invalidKey(context);
-      return;
-    }
+    // if (session === null) {
+    //   invalidKey(context);
+    //   return;
+    // }
   });
 
   context.subscriptions.push(
@@ -121,7 +125,7 @@ export async function activate(context: vscode.ExtensionContext) {
   //   )
   // );
 
-  setInterval(() => loop(context), 1000);
+  loop(context);
 }
 
 async function invalidKey(context: vscode.ExtensionContext) {
@@ -133,8 +137,10 @@ async function invalidKey(context: vscode.ExtensionContext) {
 }
 
 let lastStickyError = "";
+let stickyErrorCount = 0;
 
 async function stickyError(msg: string) {
+  stickyErrorCount++;
   if (msg !== lastStickyError) {
     vscode.window.showErrorMessage(msg);
     lastStickyError = msg;
@@ -142,27 +148,78 @@ async function stickyError(msg: string) {
   statusBar.setError();
 }
 
-async function loop(context: vscode.ExtensionContext) {
+async function loop(
+  context: vscode.ExtensionContext,
+  sinceLastFetch = Infinity,
+  prevSession?: api.SessionData,
+  forced = false
+) {
+  let loopInterval = 1000;
+
   const key = await config.getApiKey(context);
 
   if (key === "" || key === undefined) {
     statusBar.setSetup();
+    loop(context, sinceLastFetch + loopInterval, prevSession);
     return;
   }
 
   let session: api.SessionData | null = null;
 
-  try {
-    session = await api.getSession(key);
-  } catch (err: unknown) {
-    stickyError(`Failed to fetch session info: ${err}`);
-    return;
+  if (forced) {
+    stickyErrorCount = 0;
   }
 
-  if (session === null) {
-    invalidKey(context);
-    return;
+  if (
+    (stickyErrorCount > 0 ? true : sinceLastFetch >= FETCH_INTERVAL) ||
+    !prevSession ||
+    forced
+  ) {
+    console.log("fetching session");
+    try {
+      session = await api.getSession(key);
+    } catch (err: unknown) {
+      loopInterval = Math.min(
+        FETCH_RETRY_CAP,
+        FETCH_INTERVAL * Math.pow(FETCH_ERROR_FACTOR, stickyErrorCount)
+      );
+
+      stickyError(
+        `Retrying in ${Math.floor(
+          loopInterval / 1000
+        )}s. Failed to fetch session info: ${err}`
+      );
+
+      if (!forced) {
+        setTimeout(() => {
+          loop(context, sinceLastFetch + loopInterval, prevSession);
+        }, loopInterval);
+      }
+
+      return;
+    }
+
+    if (session === null) {
+      invalidKey(context);
+
+      if (!forced) {
+        loop(context, sinceLastFetch + loopInterval, prevSession);
+      }
+      return;
+    }
+
+    sinceLastFetch = 0;
+  } else {
+    if (prevSession === undefined) {
+      stickyError(
+        "An unexpected error occured. This is not an issue with the API."
+      );
+      return;
+    }
+    session = prevSession;
   }
+
+  stickyErrorCount = 0;
 
   // updateSessionStatus(!session.completed || session.paused, session.paused);
 
@@ -175,6 +232,12 @@ async function loop(context: vscode.ExtensionContext) {
   }
 
   // refreshView();
+  if (!forced) {
+    setTimeout(
+      () => loop(context, sinceLastFetch + loopInterval, session),
+      loopInterval
+    );
+  }
 }
 
 let startNotified = false;

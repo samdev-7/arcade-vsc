@@ -1,7 +1,7 @@
 import axios from "axios";
 import { AxiosResponse, AxiosError } from "axios";
 
-const hhEndpoint = "https://hackhour.hackclub.com";
+const HH_ENDPOINT = "https://hackhour.hackclub.com";
 
 axios.interceptors.request.use((config) => {
   config.headers["User-Agent"] = "Arcade VSC Extension";
@@ -28,7 +28,7 @@ export async function retrier<T>(
     return await new Promise((resolve, reject) => {
       setTimeout(async () => {
         try {
-          resolve(await retrier(fn, name, max_retries - 1, delay));
+          resolve(await retrier(fn, name, max_retries - 1, delay * 4));
         } catch (err) {
           reject(err);
         }
@@ -46,7 +46,7 @@ type RawStatusData = {
 export async function getStatus(): Promise<boolean> {
   let resp: AxiosResponse<RawStatusData>;
   try {
-    resp = await axios.get(hhEndpoint + "/status");
+    resp = await axios.get(HH_ENDPOINT + "/status");
   } catch (err) {
     console.error(`Error while fetching status: ${err}`);
     return false;
@@ -101,7 +101,7 @@ export async function getSession(key: string): Promise<SessionData | null> {
 
   let resp: AxiosResponse<RawSessionData | RawSessionError>;
   try {
-    resp = await axios.get(hhEndpoint + "/api/session/", {
+    resp = await axios.get(HH_ENDPOINT + "/api/session/", {
       headers: {
         Authorization: `Bearer ${key}`,
       },
@@ -177,7 +177,7 @@ export async function getStats(key: string): Promise<StatsData | null> {
 
   let resp: AxiosResponse<RawStatsData | RawStatsError>;
   try {
-    resp = await axios.get(hhEndpoint + "/api/stats/", {
+    resp = await axios.get(HH_ENDPOINT + "/api/stats/", {
       headers: {
         Authorization: `Bearer ${key}`,
       },
