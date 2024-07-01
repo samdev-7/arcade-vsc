@@ -197,7 +197,9 @@ async function loop(
 
   if (key === "" || key === undefined || id === "" || id === undefined) {
     statusBar.setSetup();
-    loop(context, sinceLastFetch + loopInterval, prevSession);
+    if (!forced) {
+      loop(context, sinceLastFetch + loopInterval, prevSession);
+    }
     return;
   }
 
