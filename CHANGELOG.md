@@ -5,6 +5,18 @@ All notable changes to the "arcade-vsc" extension will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2024-07-01
+
+### Fixed
+
+- Updated the README to reflect the new changes.
+
+### Changed
+
+- Reduced polling interval. The clock wil still work as normal. Start/Pause/Resume/End may be delayed.
+- Improved error handling for when the API is down to reduce the amount of requests.
+- Added back Slack user IDs as now required by the API. You will need to re-init.
+
 ## [0.6.1] - 2024-06-30
 
 ### Changed
@@ -81,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release of the extension.
 - Added the ability to track hack hour times in the status bar.
 
+[0.6.2]: https://github.com/samdev-7/arcade-vsc/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/samdev-7/arcade-vsc/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/samdev-7/arcade-vsc/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/samdev-7/arcade-vsc/compare/v0.5.2...v0.5.3

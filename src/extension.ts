@@ -214,6 +214,7 @@ async function loop(
     try {
       session = await api.getSession(key, id);
     } catch (err: unknown) {
+      console.error(`Error while fetching session: ${err}`);
       loopInterval = Math.min(
         FETCH_RETRY_CAP,
         FETCH_INTERVAL * Math.pow(FETCH_ERROR_FACTOR, stickyErrorCount)
