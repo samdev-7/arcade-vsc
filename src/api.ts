@@ -94,14 +94,20 @@ export type SessionData = {
   goal: string;
 };
 
-export async function getSession(key: string): Promise<SessionData | null> {
+export async function getSession(
+  key: string,
+  id: string
+): Promise<SessionData | null> {
   if (key === "") {
     throw new Error("Error while fetching session: API key cannot be empty");
+  }
+  if (id === "") {
+    throw new Error("Error while fetching session: ID cannot be empty");
   }
 
   let resp: AxiosResponse<RawSessionData | RawSessionError>;
   try {
-    resp = await axios.get(HH_ENDPOINT + "/api/session/", {
+    resp = await axios.get(HH_ENDPOINT + "/api/session/" + id, {
       headers: {
         Authorization: `Bearer ${key}`,
       },
@@ -170,56 +176,56 @@ export type StatsData = {
   total: number;
 };
 
-export async function getStats(key: string): Promise<StatsData | null> {
-  if (key === "") {
-    throw new Error("Error while fetching session: API key cannot be empty");
-  }
+// export async function getStats(key: string): Promise<StatsData | null> {
+//   if (key === "") {
+//     throw new Error("Error while fetching session: API key cannot be empty");
+//   }
 
-  let resp: AxiosResponse<RawStatsData | RawStatsError>;
-  try {
-    resp = await axios.get(HH_ENDPOINT + "/api/stats/", {
-      headers: {
-        Authorization: `Bearer ${key}`,
-      },
-    });
-  } catch (err) {
-    if (err instanceof AxiosError) {
-      if (err.response === undefined) {
-        throw new Error(`Error while fetching session: ${err}`);
-      }
+//   let resp: AxiosResponse<RawStatsData | RawStatsError>;
+//   try {
+//     resp = await axios.get(HH_ENDPOINT + "/api/stats/", {
+//       headers: {
+//         Authorization: `Bearer ${key}`,
+//       },
+//     });
+//   } catch (err) {
+//     if (err instanceof AxiosError) {
+//       if (err.response === undefined) {
+//         throw new Error(`Error while fetching session: ${err}`);
+//       }
 
-      resp = err.response;
-    } else {
-      throw new Error(`Error while fetching session: ${err}`);
-    }
-  }
+//       resp = err.response;
+//     } else {
+//       throw new Error(`Error while fetching session: ${err}`);
+//     }
+//   }
 
-  if (resp.status !== 200 && resp.status !== 404 && resp.status !== 401) {
-    throw new Error(
-      `Error while fetching session: Unexpected status code ${resp.status}`
-    );
-  }
+//   if (resp.status !== 200 && resp.status !== 404 && resp.status !== 401) {
+//     throw new Error(
+//       `Error while fetching session: Unexpected status code ${resp.status}`
+//     );
+//   }
 
-  const data = resp.data;
+//   const data = resp.data;
 
-  if (
-    !data.ok &&
-    (data.error === "User not found" || data.error === "Unauthorized")
-  ) {
-    return null;
-  } else if (!data.ok) {
-    throw new Error(
-      `Error while fetching session: Unexpected result of ${JSON.stringify(
-        data
-      )}`
-    );
-  }
+//   if (
+//     !data.ok &&
+//     (data.error === "User not found" || data.error === "Unauthorized")
+//   ) {
+//     return null;
+//   } else if (!data.ok) {
+//     throw new Error(
+//       `Error while fetching session: Unexpected result of ${JSON.stringify(
+//         data
+//       )}`
+//     );
+//   }
 
-  return {
-    sessions: data.data.sessions,
-    total: data.data.total,
-  };
-}
+//   return {
+//     sessions: data.data.sessions,
+//     total: data.data.total,
+//   };
+// }
 
 type RawStartError = {
   ok: false;

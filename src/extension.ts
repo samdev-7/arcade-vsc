@@ -25,6 +25,26 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("arcade-vsc.init", async () => {
+      const prevID = await config.getID();
+
+      let id = await vscode.window.showInputBox({
+        prompt: "Enter your user ID from the Hack Club Slack",
+        placeHolder: !!prevID
+          ? `This will overwrite your current ID: (${prevID})`
+          : "You can get this from #what-is-my-slack-id",
+        validateInput: (input: string) =>
+          !!input && /^[A-Z0-9]{5,}$/.test(input)
+            ? ""
+            : "Please enter a valid ID (not your username or API key)",
+      });
+
+      if (!id) {
+        vscode.window.showInformationMessage(
+          "Exited Arcade setup without saving as no ID was provided."
+        );
+        return;
+      }
+
       const prevKey = await config.getApiKey(context);
 
       let key = await vscode.window.showInputBox({
@@ -48,30 +68,38 @@ export async function activate(context: vscode.ExtensionContext) {
       let session: api.SessionData | null = null;
 
       try {
-        session = await api.retrier(() => api.getSession(key), "getSession");
+        session = await api.retrier(
+          () => api.getSession(key, id),
+          "getSession"
+        );
       } catch (err: unknown) {
-        vscode.window.showErrorMessage(`Failed to validate API key: ${err}`);
+        vscode.window.showErrorMessage(
+          `Failed to validate information key: ${err}`
+        );
         return;
       }
 
       if (session === null) {
         vscode.window.showErrorMessage(
-          "Your API KEY is invalid! Please make sure you have at least one arcade session and try again."
+          "Your saved info is invalid! Please make sure you have at least one arcade session and try again."
         );
         return;
       }
 
       vscode.window.showInformationMessage(
-        "Your API key has been securely saved locally."
+        "Your info has been securely saved locally."
       );
       config.saveApiKey(context, key);
+      config.saveID(id);
       statusBar.setLoading();
+      loop(context, Infinity, undefined, true);
     })
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand("arcade-vsc.clear", async () => {
       await config.clearApiKey(context);
+      await config.clearID();
       vscode.window.showInformationMessage("Cleared saved data");
     })
   );
@@ -94,6 +122,12 @@ export async function activate(context: vscode.ExtensionContext) {
       statusBar.setSetup();
       return;
     }
+    config.getID().then(async (id) => {
+      if (id === "" || id === undefined) {
+        statusBar.setSetup();
+        return;
+      }
+    });
 
     // let session: api.SessionData | null = null;
 
@@ -157,8 +191,9 @@ async function loop(
   let loopInterval = 1000;
 
   const key = await config.getApiKey(context);
+  const id = await config.getID();
 
-  if (key === "" || key === undefined) {
+  if (key === "" || key === undefined || id === "" || id === undefined) {
     statusBar.setSetup();
     loop(context, sinceLastFetch + loopInterval, prevSession);
     return;
@@ -177,7 +212,7 @@ async function loop(
   ) {
     console.log("fetching session");
     try {
-      session = await api.getSession(key);
+      session = await api.getSession(key, id);
     } catch (err: unknown) {
       loopInterval = Math.min(
         FETCH_RETRY_CAP,
