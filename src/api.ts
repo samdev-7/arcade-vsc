@@ -18,8 +18,7 @@ export async function retrier<T>(
     return await fn();
   } catch (err: unknown) {
     console.warn(
-      `Retrying${name ? " " + name : ""}... ${
-        max_retries - 1
+      `Retrying${name ? " " + name : ""}... ${max_retries - 1
       } retries left: ${err}`
     );
     if (max_retries <= 1) {
@@ -241,8 +240,66 @@ type RawStartData = {
   };
 };
 
-export async function startSession(key: string): Promise<void> {
-  throw new Error("Not implemented");
+export async function startSession(key: string, id: string, work?: string): Promise<true | null> {
+  if (key === "") {
+    throw new Error("Error while starting session: API key cannot be empty");
+  }
+  if (id === "") {
+    throw new Error("Error while starting session: ID cannot be empty");
+  }
+  if (work === "" || work === undefined) {
+    throw new Error("Error while starting session: Work cannot be empty");
+  }
+
+  let resp: AxiosResponse<RawStartData | RawStartError>;
+  try {
+    resp = await axios.post(HH_ENDPOINT + "/api/start/" + id, { work }, {
+      headers: {
+        Authorization: `Bearer ${key}`,
+      },
+    });
+  } catch (err) {
+    if (err instanceof AxiosError) {
+      if (err.response === undefined) {
+        throw new Error(`Error while starting session: ${err}`);
+      }
+
+      resp = err.response;
+    } else {
+      throw new Error(`Error while starting session: ${err}`);
+    }
+  }
+
+  if (resp.status !== 200 && resp.status !== 404 && resp.status !== 401 && resp.status !== 400) {
+    throw new Error(
+      `Error while starting session: Unexpected status code ${resp.status}`
+    );
+  }
+
+  const data = resp.data;
+
+  if (
+    !data.ok &&
+    (data.error === "You already have an active session")
+  ) {
+    throw new Error(data.error);
+  }
+
+  if (
+    !data.ok &&
+    (data.error === "User not found" || data.error === "Unauthorized")
+  ) {
+    console.log(data.error);
+    return null;
+  } else if (!data.ok) {
+    throw new Error(
+      `Error while starting session: Unexpected ${resp.status} with ${JSON.stringify(
+        data
+      )}`
+    );
+  }
+
+  return true;
 }
 
 type RawPauseError = {
@@ -264,8 +321,65 @@ export type PauseData = {
   paused: boolean;
 };
 
-export async function pauseSession(key: string): Promise<PauseData> {
-  throw new Error("Not implemented");
+export async function pauseSession(key: string, id: string): Promise<PauseData | null> {
+  if (key === "") {
+    throw new Error("Error while pausing session: API key cannot be empty");
+  }
+  if (id === "") {
+    throw new Error("Error while pausing session: ID cannot be empty");
+  }
+
+  let resp: AxiosResponse<RawPauseData | RawPauseError>;
+  try {
+    resp = await axios.post(HH_ENDPOINT + "/api/pause/" + id, null, {
+      headers: {
+        Authorization: `Bearer ${key}`,
+      },
+    });
+  } catch (err) {
+    if (err instanceof AxiosError) {
+      if (err.response === undefined) {
+        throw new Error(`Error while pausing session: ${err}`);
+      }
+
+      resp = err.response;
+    } else {
+      throw new Error(`Error while pausing session: ${err}`);
+    }
+  }
+
+  if (resp.status !== 200 && resp.status !== 404 && resp.status !== 401 && resp.status !== 400) {
+    throw new Error(
+      `Error while pausing session: Unexpected status code ${resp.status}`
+    );
+  }
+
+  const data = resp.data;
+
+  if (
+    !data.ok &&
+    (data.error === "Invalid user or no active session found" || data.error === "First time sessions cannot be paused")
+  ) {
+    throw new Error(data.error);
+  }
+
+  if (
+    !data.ok &&
+    (data.error === "User not found" || data.error === "Unauthorized")
+  ) {
+    console.log(data.error);
+    return null;
+  } else if (!data.ok) {
+    throw new Error(
+      `Error while pausing session: Unexpected ${resp.status} with ${JSON.stringify(
+        data
+      )}`
+    );
+  }
+
+  return {
+    paused: data.data.paused,
+  };
 }
 
 type RawEndError = {
@@ -282,6 +396,61 @@ type RawEndData = {
   };
 };
 
-export async function endSession(key: string): Promise<void> {
-  throw new Error("Not implemented");
+export async function endSession(key: string, id: string): Promise<true | null> {
+  if (key === "") {
+    throw new Error("Error while cancelling session: API key cannot be empty");
+  }
+  if (id === "") {
+    throw new Error("Error while cancelling session: ID cannot be empty");
+  }
+
+  let resp: AxiosResponse<RawEndData | RawEndError>;
+  try {
+    resp = await axios.post(HH_ENDPOINT + "/api/cancel/" + id, null, {
+      headers: {
+        Authorization: `Bearer ${key}`,
+      },
+    });
+  } catch (err) {
+    if (err instanceof AxiosError) {
+      if (err.response === undefined) {
+        throw new Error(`Error while cancelling session: ${err}`);
+      }
+
+      resp = err.response;
+    } else {
+      throw new Error(`Error while cancelling session: ${err}`);
+    }
+  }
+
+  if (resp.status !== 200 && resp.status !== 404 && resp.status !== 401 && resp.status !== 400) {
+    throw new Error(
+      `Error while cancelling session: Unexpected status code ${resp.status}`
+    );
+  }
+
+  const data = resp.data;
+
+  if (
+    !data.ok &&
+    (data.error === "Invalid user or no active session found" || data.error === "First time sessions cannot be cancelled")
+  ) {
+    throw new Error(data.error);
+  }
+
+  if (
+    !data.ok &&
+    (data.error === "User not found" || data.error === "Unauthorized")
+  ) {
+    console.log(data.error);
+    return null;
+  } else if (!data.ok) {
+    throw new Error(
+      `Error while cancelling session: Unexpected ${resp.status} with ${JSON.stringify(
+        data
+      )}`
+    );
+  }
+
+  return true;
 }

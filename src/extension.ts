@@ -3,13 +3,13 @@ import * as statusBar from "./statusbar";
 import * as config from "./config";
 import * as notifications from "./notifications";
 import * as api from "./api";
-// import {
-//   ArcadeViewProvider,
-//   refreshView,
-//   updateSessionStatus,
-//   updateSessionInfo,
-//   updateLoadingStatus,
-// } from "./sidebar";
+import {
+  ArcadeViewProvider,
+  refreshView,
+  updateSessionStatus,
+  updateSessionInfo,
+  updateLoadingStatus,
+} from "./sidebar";
 
 const HC_SLACK_REDIRECT = "slack://channel?team=T0266FRGM&id=C06SBHMQU8G";
 const FETCH_INTERVAL = 1000 * 10;
@@ -152,14 +152,13 @@ export async function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  // TODO: Re-enable webview when ready
-  // context.subscriptions.push(
-  //   vscode.window.registerWebviewViewProvider(
-  //     "arcade.session",
-  //     new ArcadeViewProvider(context.extensionUri, onWebviewMessage, context),
-  //     { webviewOptions: { retainContextWhenHidden: true } }
-  //   )
-  // );
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      "arcade.session",
+      new ArcadeViewProvider(context.extensionUri, onWebviewMessage, context),
+      { webviewOptions: { retainContextWhenHidden: true } }
+    )
+  );
 
   loop(context);
 }
@@ -184,12 +183,15 @@ async function stickyError(msg: string) {
   statusBar.setError();
 }
 
+let cachedSession: api.SessionData | undefined = undefined;
+
 async function loop(
   context: vscode.ExtensionContext,
   sinceLastFetch = Infinity,
   prevSession?: api.SessionData,
   forced = false
 ) {
+  cachedSession = prevSession;
   let loopInterval = 1000;
 
   const key = await config.getApiKey(context);
@@ -202,6 +204,8 @@ async function loop(
     }
     return;
   }
+
+  sinceLastFetch = Math.min(sinceLastFetch, lastCommand - Date.now() >= 0 ? lastCommand - Date.now() : Infinity);
 
   let session: api.SessionData | null = null;
 
@@ -249,6 +253,7 @@ async function loop(
     }
 
     sinceLastFetch = 0;
+    updateLoadingStatus(false);
   } else {
     if (prevSession === undefined) {
       stickyError(
@@ -261,7 +266,7 @@ async function loop(
 
   stickyErrorCount = 0;
 
-  // updateSessionStatus(!session.completed || session.paused, session.paused);
+  updateSessionStatus(!session.completed || session.paused, session.paused);
 
   if (!session.completed && !session.paused) {
     await onActive(session);
@@ -271,7 +276,7 @@ async function loop(
     await onPaused(session);
   }
 
-  // refreshView();
+  refreshView();
   if (!forced) {
     setTimeout(
       () => loop(context, sinceLastFetch + loopInterval, session),
@@ -296,7 +301,7 @@ async function onActive(session: api.SessionData) {
     .toString()
     .padStart(2, "0");
 
-  // updateSessionInfo(Math.floor(remainingMs / 1000), session.goal, session.work);
+  updateSessionInfo(Math.floor(remainingMs / 1000), session.goal, session.work);
 
   if (remainingMs > 0) {
     statusBar.setText(`$(watch) ${remainingMin}:${remainingSec}`);
@@ -335,7 +340,7 @@ async function onPaused(session: api.SessionData) {
   isActive = false;
 
   statusBar.setText(`$(debug-pause) Paused: ${session.remaining} mins`);
-  // updateSessionInfo(0, session.goal, session.work);
+  updateSessionInfo(0, session.goal, session.work);
 
   if (!pauseNotified) {
     notifications.sessionPause();
@@ -346,38 +351,69 @@ async function onPaused(session: api.SessionData) {
   resumeNotified = false;
 }
 
-// async function onWebviewMessage(event: any, context: vscode.ExtensionContext) {
-//   let command = event.command as "start" | "pause" | "resume" | "end";
+let lastCommand = 0;
 
-//   if ((await config.getApiKey(context)) === undefined) {
-//     vscode.window.showErrorMessage(
-//       `You need to set your API key to interact with sessions. Run the "Arcade: Init" command to set it up.`
-//     );
-//     return;
-//   }
+async function onWebviewMessage(event: any, context: vscode.ExtensionContext) {
+  let command = event.command as "start" | "pause" | "resume" | "end";
 
-//   updateLoadingStatus(true);
-//   refreshView();
+  if ((await config.getApiKey(context)) === undefined || (await config.getApiKey(context)) === '' || (await config.getID()) === undefined || (await config.getID()) === '') {
+    vscode.window.showErrorMessage(
+      `You need to setup Arcade interact with sessions. Run the "Arcade: Init" command to set it up.`
+    );
+    return;
+  }
 
-//   switch (command) {
-//     case "start":
-//       console.log("start from webview");
-//       api.startSession((await config.getApiKey(context))!);
-//       break;
-//     case "pause":
-//       console.log("pause from webview");
-//       api.pauseSession((await config.getApiKey(context))!);
-//       break;
-//     case "resume":
-//       console.log("resume from webview");
-//       api.pauseSession((await config.getApiKey(context))!);
-//       break;
-//     case "end":
-//       console.log("end from webview");
-//       api.endSession((await config.getApiKey(context))!);
-//       break;
-//   }
+  updateLoadingStatus(true);
+  refreshView();
 
-//   updateLoadingStatus(false);
-//   refreshView();
-// }
+  try {
+    switch (command) {
+      case "start":
+        console.log("start from webview");
+        let resps = await api.startSession((await config.getApiKey(context))!, (await config.getID())!, event.work);
+        if (resps === null) {
+          invalidKey(context);
+        }
+        break;
+      case "pause":
+        console.log("pause from webview");
+        let respp = await api.pauseSession((await config.getApiKey(context))!, (await config.getID())!);
+        if (respp === null) {
+          invalidKey(context);
+        }
+        // if (cachedSession) {
+        //   cachedSession.paused = respp?.paused ?? true;
+        //   await onPaused(cachedSession);
+        //   updateLoadingStatus(false);
+        // }
+        break;
+      case "resume":
+        console.log("resume from webview");
+        let respr = await api.pauseSession((await config.getApiKey(context))!, (await config.getID())!);
+        if (respr === null) {
+          invalidKey(context);
+        }
+        // if (cachedSession) {
+        //   cachedSession.paused = respr?.paused ?? false;
+        //   await onActive(cachedSession);
+        //   updateLoadingStatus(false);
+        // }
+        break;
+      case "end":
+        console.log("end from webview");
+        let respe = await api.endSession((await config.getApiKey(context))!, (await config.getID())!);
+        if (respe === null) {
+          invalidKey(context);
+        }
+        break;
+    }
+  } catch (err: unknown) {
+    console.error(`Failed to send ${command} command: ${err}`);
+    vscode.window.showErrorMessage(`Failed to send ${command} command: ${err}`);
+    updateLoadingStatus(false);
+    refreshView();
+    return;
+  };
+
+  lastCommand = Date.now();
+}

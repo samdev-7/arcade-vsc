@@ -66,11 +66,10 @@ function getHtmlContent(): string {
     <p>Let's start a new session.</p>
     <div class="input">
       <strong>What are you working on?</strong>
-      <vscode-text-field placeholder="Today I'm working on..."></vscode-text-field>
+      <vscode-text-field placeholder="Today I'm working on..." id="work"></vscode-text-field>
     </div>
-    <vscode-button class="start-btn" id="start" ${
-      loading ? "disabled" : ""
-    }>Start the Timer</vscode-button>
+    <vscode-button class="start-btn" id="start" ${loading ? "disabled" : ""
+      }>Start the Timer</vscode-button>
     `;
   } else if (isPaused) {
     return `
@@ -80,8 +79,7 @@ function getHtmlContent(): string {
     <vscode-divider></vscode-divider>
     <p class="goal"><strong>Goal:</strong> ${goal}</p>
     <div class="btn-group">
-      <vscode-button id="resume" ${
-        loading ? "disabled" : ""
+      <vscode-button id="resume" ${loading ? "disabled" : ""
       }>Resume</vscode-button>
     </div>
     `;
@@ -89,19 +87,16 @@ function getHtmlContent(): string {
     return `
     <p>Get to work! You have <code>${Math.ceil(
       remainingSeconds / 60
-    )}</code> minute${
-      Math.floor(remainingSeconds / 60) === 1 ? "" : "s"
-    } left to work on:</p>
+    )}</code> minute${Math.floor(remainingSeconds / 60) === 1 ? "" : "s"
+      } left to work on:</p>
     <vscode-divider></vscode-divider>
     <p><em>${work}</em></p>
     <vscode-divider></vscode-divider>
     <p class="goal"><strong>Goal:</strong> ${goal}</p>
     <div class="btn-group">
-      <vscode-button id="pause" ${
-        loading ? "disabled" : ""
+      <vscode-button id="pause" ${loading ? "disabled" : ""
       }>Pause</vscode-button>
-      <vscode-button appearance="secondary" id="end" ${
-        loading ? "disabled" : ""
+      <vscode-button appearance="secondary" id="end" ${loading ? "disabled" : ""
       }>End Early</vscode-button>
     </div>
     `;
@@ -142,13 +137,12 @@ function htmlTemplate(content: string) {
       </head>
       <body>
         ${content}
-        ${
-          extensionUri
-            ? '<script type="module" src="' +
-              getUrl(view!.webview, extensionUri, ["dist", "webview.js"]) +
-              '"></script>'
-            : ""
-        }
+        ${extensionUri
+      ? '<script type="module" src="' +
+      getUrl(view!.webview, extensionUri, ["dist", "webview.js"]) +
+      '"></script>'
+      : ""
+    }
       </body>
     </html>`;
 }

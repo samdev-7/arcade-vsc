@@ -63,26 +63,23 @@
         }
       }
     },
-    "_comment": {
-      "_comment": "This section is used to add views to the sidebar.",
-      "viewsContainers": {
-        "activitybar": [
-          {
-            "id": "arcade",
-            "title": "Hack Club Arcade",
-            "icon": "media/sidebar.svg"
-          }
-        ]
-      },
-      "views": {
-        "arcade": [
-          {
-            "type": "webview",
-            "id": "arcade.session",
-            "name": "Hack Club Arcade"
-          }
-        ]
-      }
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "arcade",
+          "title": "Hack Club Arcade",
+          "icon": "media/sidebar.svg"
+        }
+      ]
+    },
+    "views": {
+      "arcade": [
+        {
+          "type": "webview",
+          "id": "arcade.session",
+          "name": "Hack Club Arcade"
+        }
+      ]
     }
   },
   "scripts": {
@@ -99,6 +96,7 @@
     "@types/node": "20.x",
     "@types/node-fetch": "^2.6.11",
     "@types/vscode": "^1.90.0",
+    "@types/vscode-webview": "^1.57.5",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
     "@typescript-eslint/parser": "^7.11.0",
     "esbuild": "^0.21.5",
@@ -107,6 +105,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@vscode/webview-ui-toolkit": "^1.4.0",
     "axios": "^1.7.2"
   }
 }
