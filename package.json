@@ -2,7 +2,7 @@
   "name": "arcade-vsc",
   "displayName": "Arcade VSC",
   "description": "Visual Studio Code integration for Hack Club Arcade",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "engines": {
     "vscode": "^1.90.0"
   },

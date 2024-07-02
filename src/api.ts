@@ -4,7 +4,7 @@ import { AxiosResponse, AxiosError } from "axios";
 const HH_ENDPOINT = "https://hackhour.hackclub.com";
 
 axios.interceptors.request.use((config) => {
-  config.headers["User-Agent"] = "Arcade VSC Extension";
+  config.headers["User-Agent"] = "Arcade VSC Extension/0.7.1";
   return config;
 });
 
