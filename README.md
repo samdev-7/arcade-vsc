@@ -4,15 +4,34 @@ A VS code extension that allows you to view the [Hack Club Arcade](https://hackc
 
 Install it [from the marketplace](https://marketplace.visualstudio.com/items?itemName=samdev.arcade-vsc).
 
+_If you found this extension helpful in your Arcade journey, maybe you could give me a vote?_ 🙌
+
 ## Features
 
-A timer will be added to the right of your status bar that will show you how long left you have in your hack hour session.
+### The timer (ofc)
+A timer will be added to the right of your status bar that will show you how long left you have in your hack hour session.  
+Accurate to the second!
 
 ![The timer in the status bar](https://cloud-dgalzi41m-hack-club-bot.vercel.app/0image.png)
 
-## Requirements
+### Notifications
+Arcade VSC has helpful notifications. Know when your session starts/pauses/ends!
 
-You have to be in the Hack Club Slack to use the extension. See the [Hack Club Arcade](https://hackclub.com/arcade) page for information on how to join.
+![Start/pause/end notifications](https://cloud-9rffl52xc-hack-club-bot.vercel.app/0image.png)
+
+For folks (like myself) who keep forgetting to start sessions, get reminded to start a session when you start typing!
+
+![Reminder notifications](https://cloud-ixy70dhma-hack-club-bot.vercel.app/0image.png)
+
+These notifications can be adjusted via the settings!
+
+![Settings page](https://cloud-q7503ib70-hack-club-bot.vercel.app/0image.png)
+
+### **NEW**: Control sessions
+You can now start, stop, and control Arcade sessions. Use the pre-release version to check it out!
+
+![Starting Arcade sessions within VS Code](https://cloud-4cnx5mxku-hack-club-bot.vercel.app/0image.png)
+![Controlling Arcade sessions within VS Code](https://cloud-o315s3r6u-hack-club-bot.vercel.app/0image.png)
 
 ## Extension Settings
 
